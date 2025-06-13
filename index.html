@@ -15,6 +15,9 @@
 function App() {
   const [tasks, setTasks] = React.useState(() => JSON.parse(localStorage.getItem('tasks') || '[]'));
   const [newTask, setNewTask] = React.useState('');
+  const [filter, setFilter] = React.useState('all');
+  const [editing, setEditing] = React.useState(null);
+  const [editingText, setEditingText] = React.useState('');
 
   React.useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -27,6 +30,23 @@ function App() {
     setNewTask('');
   };
 
+  const startEdit = idx => {
+    setEditing(idx);
+    setEditingText(tasks[idx].text);
+  };
+
+  const saveEdit = idx => {
+    const text = editingText.trim();
+    if (!text) return cancelEdit();
+    setTasks(tasks.map((t, i) => i === idx ? { ...t, text } : t));
+    cancelEdit();
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setEditingText('');
+  };
+
   const toggleDone = idx => {
     setTasks(tasks.map((t, i) => i === idx ? { ...t, done: !t.done } : t));
   };
@@ -35,9 +55,19 @@ function App() {
     setTasks(tasks.filter((_, i) => i !== idx));
   };
 
+  const clearCompleted = () => {
+    setTasks(tasks.filter(t => !t.done));
+  };
+
+  const filteredTasks = tasks.filter(t =>
+    filter === 'active' ? !t.done : filter === 'completed' ? t.done : true
+  );
+
   return (
     <div className="container mx-auto max-w-md p-4 bg-white shadow rounded">
-      <h1 className="text-2xl font-bold mb-4 text-center">Simple To-Do List</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 rounded">
+        Simple To-Do List
+      </h1>
       <div className="flex mb-4">
         <input
           className="flex-grow p-2 border rounded-l"
@@ -53,25 +83,49 @@ function App() {
           Add
         </button>
       </div>
+
+      <div className="flex justify-between items-center mb-4 text-sm text-gray-600">
+        <span>{tasks.filter(t => t.done).length} / {tasks.length} completed</span>
+        <div>
+          <button className={filter === 'all' ? 'font-bold mr-2' : 'mr-2'} onClick={() => setFilter('all')}>All</button>
+          <button className={filter === 'active' ? 'font-bold mr-2' : 'mr-2'} onClick={() => setFilter('active')}>Active</button>
+          <button className={filter === 'completed' ? 'font-bold' : ''} onClick={() => setFilter('completed')}>Completed</button>
+        </div>
+      </div>
+
       <ul>
-        {tasks.map((task, idx) => (
+        {filteredTasks.map((task, idx) => (
           <li key={idx} className="flex items-center border-b py-2">
-            <span className={`flex-grow ${task.done ? 'line-through text-gray-500' : ''}`}>{task.text}</span>
-            <button
-              className="mr-2 text-sm text-blue-500"
-              onClick={() => toggleDone(idx)}
-            >
-              {task.done ? 'Undo' : 'Done'}
-            </button>
-            <button
-              className="text-sm text-red-500"
-              onClick={() => deleteTask(idx)}
-            >
-              Delete
-            </button>
+            {editing === idx ? (
+              <>
+                <input
+                  className="flex-grow p-1 border rounded mr-2"
+                  value={editingText}
+                  onChange={e => setEditingText(e.target.value)}
+                />
+                <button className="mr-2 text-sm text-green-500" onClick={() => saveEdit(idx)}>Save</button>
+                <button className="text-sm text-gray-500" onClick={cancelEdit}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <span className={`flex-grow ${task.done ? 'line-through text-gray-500' : ''}`}>{task.text}</span>
+                <button className="mr-2 text-sm text-blue-500" onClick={() => toggleDone(idx)}>{task.done ? 'Undo' : 'Done'}</button>
+                <button className="mr-2 text-sm text-yellow-500" onClick={() => startEdit(idx)}>Edit</button>
+                <button className="text-sm text-red-500" onClick={() => deleteTask(idx)}>Delete</button>
+              </>
+            )}
           </li>
         ))}
       </ul>
+
+      {tasks.some(t => t.done) && (
+        <button
+          className="mt-4 text-sm text-red-600 underline"
+          onClick={clearCompleted}
+        >
+          Clear completed
+        </button>
+      )}
     </div>
   );
 }
