@@ -2,6 +2,10 @@
 
 A minimal command-line to-do list app in Python.
 
+## Requirements
+
+- Python 3.x (no external dependencies)
+
 ## Usage
 
 ```sh
@@ -10,4 +14,5 @@ python todo.py list
 python todo.py done 1
 ```
 
-Tasks are stored in a local file `tasks.txt`. 
+Tasks are stored in a local file `tasks.txt`.
+
