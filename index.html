@@ -3,101 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <title>Simple To-Do List</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 2rem auto;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        li {
-            padding: 0.5rem;
-            border-bottom: 1px solid #ccc;
-            display: flex;
-            align-items: center;
-        }
-        li.done span {
-            text-decoration: line-through;
-            color: #888;
-        }
-        button {
-            margin-left: auto;
-        }
-        input[type="text"] {
-            width: 80%;
-            padding: 0.5rem;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
-    <h1>Simple To-Do List</h1>
-    <div>
-        <input id="new-task" type="text" placeholder="Add new task" />
-        <button onclick="addTask()">Add</button>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<div id="root" class="w-full"></div>
+
+<script type="text/babel">
+function App() {
+  const [tasks, setTasks] = React.useState(() => JSON.parse(localStorage.getItem('tasks') || '[]'));
+  const [newTask, setNewTask] = React.useState('');
+
+  React.useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  const addTask = () => {
+    const text = newTask.trim();
+    if (!text) return;
+    setTasks([...tasks, { text, done: false }]);
+    setNewTask('');
+  };
+
+  const toggleDone = idx => {
+    setTasks(tasks.map((t, i) => i === idx ? { ...t, done: !t.done } : t));
+  };
+
+  const deleteTask = idx => {
+    setTasks(tasks.filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div className="container mx-auto max-w-md p-4 bg-white shadow rounded">
+      <h1 className="text-2xl font-bold mb-4 text-center">Simple To-Do List</h1>
+      <div className="flex mb-4">
+        <input
+          className="flex-grow p-2 border rounded-l"
+          type="text"
+          value={newTask}
+          onChange={e => setNewTask(e.target.value)}
+          placeholder="Add new task"
+        />
+        <button
+          className="p-2 bg-blue-500 text-white rounded-r"
+          onClick={addTask}
+        >
+          Add
+        </button>
+      </div>
+      <ul>
+        {tasks.map((task, idx) => (
+          <li key={idx} className="flex items-center border-b py-2">
+            <span className={`flex-grow ${task.done ? 'line-through text-gray-500' : ''}`}>{task.text}</span>
+            <button
+              className="mr-2 text-sm text-blue-500"
+              onClick={() => toggleDone(idx)}
+            >
+              {task.done ? 'Undo' : 'Done'}
+            </button>
+            <button
+              className="text-sm text-red-500"
+              onClick={() => deleteTask(idx)}
+            >
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
-    <ul id="tasks"></ul>
+  );
+}
 
-    <script>
-        function loadTasks() {
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            return tasks;
-        }
-
-        function saveTasks(tasks) {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-        }
-
-        function renderTasks() {
-            const list = document.getElementById('tasks');
-            list.innerHTML = '';
-            const tasks = loadTasks();
-            tasks.forEach((task, idx) => {
-                const li = document.createElement('li');
-                if (task.done) li.classList.add('done');
-                const span = document.createElement('span');
-                span.textContent = task.text;
-                li.appendChild(span);
-                const button = document.createElement('button');
-                button.textContent = task.done ? 'Undo' : 'Done';
-                button.onclick = () => toggleDone(idx);
-                li.appendChild(button);
-                const del = document.createElement('button');
-                del.textContent = 'Delete';
-                del.onclick = () => deleteTask(idx);
-                li.appendChild(del);
-                list.appendChild(li);
-            });
-        }
-
-        function addTask() {
-            const input = document.getElementById('new-task');
-            const text = input.value.trim();
-            if (!text) return;
-            const tasks = loadTasks();
-            tasks.push({ text, done: false });
-            saveTasks(tasks);
-            input.value = '';
-            renderTasks();
-        }
-
-        function toggleDone(index) {
-            const tasks = loadTasks();
-            tasks[index].done = !tasks[index].done;
-            saveTasks(tasks);
-            renderTasks();
-        }
-
-        function deleteTask(index) {
-            const tasks = loadTasks();
-            tasks.splice(index, 1);
-            saveTasks(tasks);
-            renderTasks();
-        }
-
-        document.addEventListener('DOMContentLoaded', renderTasks);
-    </script>
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
 </body>
 </html>
