@@ -1,7 +1,9 @@
 import sys
 import os
 
-TASKS_FILE = 'tasks.txt'
+# Always resolve tasks.txt relative to this script so the GUI works no matter
+# where it is launched from.
+TASKS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tasks.txt')
 
 def load_tasks():
     if not os.path.exists(TASKS_FILE):
@@ -55,4 +57,4 @@ def main():
         print('Invalid command or arguments.')
 
 if __name__ == '__main__':
-    main() 
+    main()
